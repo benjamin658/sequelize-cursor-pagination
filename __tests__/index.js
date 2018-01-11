@@ -6,7 +6,7 @@ const sequelize = new Sequelize('test', null, null, { dialect: 'sqlite', storage
 const withPagination = require('../src');
 
 const Test = sequelize.define('test', {
-  id: { type:  Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
+  id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
   counter: Sequelize.INTEGER,
 });
 
@@ -38,14 +38,14 @@ test('paginates correctly when paginationField is primaryKeyField', async t => {
   t.is(pagination.cursors.hasNext, true);
   t.is(pagination.cursors.hasPrevious, false);
 
-  pagination = await Test.paginate({ limit: 2, after: pagination.cursors.after }); 
-  
+  pagination = await Test.paginate({ limit: 2, after: pagination.cursors.after });
+
   t.is(pagination.results[0].id, 3);
   t.is(pagination.results[1].id, 4);
   t.is(pagination.cursors.hasNext, true);
   t.is(pagination.cursors.hasPrevious, true);
 
-  pagination = await Test.paginate({ limit: 2, before: pagination.cursors.before }); 
+  pagination = await Test.paginate({ limit: 2, before: pagination.cursors.before });
 
   t.is(pagination.results[0].id, 1);
   t.is(pagination.results[1].id, 2);
@@ -55,49 +55,81 @@ test('paginates correctly when sort direction is descending', async t => {
   const data = await generateTestData();
 
   let pagination = await Test.paginate({ limit: 2, desc: true });
-  
-    t.is(pagination.results[0].id, 5);
-    t.is(pagination.results[1].id, 4);
-    t.is(pagination.cursors.hasNext, true);
-    t.is(pagination.cursors.hasPrevious, false);
-  
-    pagination = await Test.paginate({ limit: 2, after: pagination.cursors.after, desc: true }); 
-    
-    t.is(pagination.results[0].id, 3);
-    t.is(pagination.results[1].id, 2);
-    t.is(pagination.cursors.hasNext, true);
-    t.is(pagination.cursors.hasPrevious, true);
+
+  t.is(pagination.results[0].id, 5);
+  t.is(pagination.results[1].id, 4);
+  t.is(pagination.cursors.hasNext, true);
+  t.is(pagination.cursors.hasPrevious, false);
+
+  pagination = await Test.paginate({ limit: 2, after: pagination.cursors.after, desc: true });
+
+  t.is(pagination.results[0].id, 3);
+  t.is(pagination.results[1].id, 2);
+  t.is(pagination.cursors.hasNext, true);
+  t.is(pagination.cursors.hasPrevious, true);
 });
 
 test('paginates correctly when paginationField is not the primaryKeyField', async t => {
   const data = await generateTestData();
-  
-    let pagination = await Test.paginate({ limit: 2, paginationField: 'counter' });
-  
-    t.is(pagination.results[0].counter, 1);
-    t.is(pagination.results[1].counter, 2);
-    t.is(pagination.cursors.hasNext, true);
-    t.is(pagination.cursors.hasPrevious, false);
-  
-    pagination = await Test.paginate({ limit: 2, paginationField: 'counter', after: pagination.cursors.after }); 
-    
-    t.is(pagination.results[0].counter, 3);
-    t.is(pagination.results[1].counter, 4);
-    t.is(pagination.results[1].id, 1)
-    t.is(pagination.cursors.hasNext, true);
-    t.is(pagination.cursors.hasPrevious, true);
 
-    pagination = await Test.paginate({ limit: 2, paginationField: 'counter', after: pagination.cursors.after }); 
+  let pagination = await Test.paginate({ limit: 2, paginationField: 'counter' });
 
-    t.is(pagination.results[0].counter, 4);
-    t.is(pagination.results[0].id, 2)
-    t.is(pagination.cursors.hasNext, false);
-    t.is(pagination.cursors.hasPrevious, true);    
+  t.is(pagination.results[0].counter, 1);
+  t.is(pagination.results[1].counter, 2);
+  t.is(pagination.cursors.hasNext, true);
+  t.is(pagination.cursors.hasPrevious, false);
+
+  pagination = await Test.paginate({ limit: 2, paginationField: 'counter', after: pagination.cursors.after });
+
+  t.is(pagination.results[0].counter, 3);
+  t.is(pagination.results[1].counter, 4);
+  t.is(pagination.results[1].id, 1)
+  t.is(pagination.cursors.hasNext, true);
+  t.is(pagination.cursors.hasPrevious, true);
+
+  pagination = await Test.paginate({ limit: 2, paginationField: 'counter', after: pagination.cursors.after });
+
+  t.is(pagination.results[0].counter, 4);
+  t.is(pagination.results[0].id, 2)
+  t.is(pagination.cursors.hasNext, false);
+  t.is(pagination.cursors.hasPrevious, true);
 });
 
 test('paginates correctly when findAll attributes are provided', async t => {
   const data = await generateTestData();
 
-    let pagination = await Test.paginate({ limit: 2, attributes: ['id'], paginationField: 'counter' });
-    t.is(pagination.results[0].counter, undefined);
+  let pagination = await Test.paginate({ limit: 2, attributes: ['id'], paginationField: 'counter' });
+  t.is(pagination.results[0].id, 3);
+  t.is(pagination.results[0].counter, undefined);
+});
+
+test('use findAndCountAll and get count if rowCount parameter is true', async t => {
+  const data = await generateTestData();
+  let pagination = await Test.paginate({
+    limit: 2,
+    attributes: ['id'],
+    paginationField: 'counter',
+    where: {
+      id: {
+        $lte: 3,
+      }
+    },
+    rowCount: true,
+  });
+
+  t.is(pagination.count, 3);
+
+  pagination = await Test.paginate({
+    limit: 2,
+    attributes: ['id'],
+    paginationField: 'counter',
+    where: {
+      id: {
+        $lte: 3,
+      }
+    },
+    rowCount: false,
+  });
+
+  t.is(pagination.count, null);
 });

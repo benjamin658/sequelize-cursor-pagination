@@ -55,6 +55,7 @@ Counter.paginate({
 The ``paginate`` method returns an object with following properties:
 
 * **results**, the results of the query
+* **count**, number of rows that match the query condition, only if `rowCount` is set to `true`, or it will be null
 * **cursors**, object containing the cursors' related data
   * **cursors.before**, the first record in the result serialized
   * **cursors.after**, the last record in the result serialized
@@ -67,10 +68,11 @@ The ``paginate`` method has the following options:
 * **attributes**, the query applied to [findAll](http://docs.sequelizejs.com/manual/tutorial/models-usage.html#-findall-search-for-multiple-elements-in-the-database) and select only some [attributes](http://docs.sequelizejs.com/manual/tutorial/querying.html#attributes)
 * **include**, applied to ``findAll`` for [eager loading](http://docs.sequelizejs.com/manual/tutorial/models-usage.html#eager-loading)
 * **limit**, limit the number of records returned
+* **rowCount**, If set to true, it will use [findAndCountAll](http://docs.sequelizejs.com/manual/tutorial/models-usage.html#-findandcountall-search-for-multiple-elements-in-the-database-returns-both-data-and-total-count) instead of [findAll](http://docs.sequelizejs.com/manual/tutorial/models-usage.html#-findall-search-for-multiple-elements-in-the-database). The default value is ``false``.
 * **desc**, whether to sort in descending order. The default value is ``false``.
 * **before**, the before cursor
 * **after**, the after curosr
-* **paginationField**, the field to be used for the pagination. The default value is the `primaryKeyField` option value.  
+* **paginationField**, the field to be used for the pagination. The default value is the `primaryKeyField` option value.
 
 ## Run tests
 

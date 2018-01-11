@@ -36,7 +36,7 @@ function getPaginationQuery(cursor, cursorOrderOperator, paginationField, primar
 
 function withPagination({ methodName = 'paginate', primaryKeyField = 'id' } = {}) {
   return model => {
-    const paginate = ({ where = {}, attributes = [], include = [], limit, before, after, desc = false, paginationField = primaryKeyField }) => {
+    const paginate = ({ where = {}, attributes = [], include = [], limit, before, after, desc = false, paginationField = primaryKeyField, rowCount = false }) => {
       const decodedBefore = !!before ? decodeCursor(before) : null;
       const decodedAfter = !!after ? decodeCursor(after) : null;
       const cursorOrderIsDesc = before ? !desc : desc;
@@ -55,7 +55,8 @@ function withPagination({ methodName = 'paginate', primaryKeyField = 'id' } = {}
         ? { $and: [paginationQuery, where] }
         : where;
 
-      return model.findAll({
+      // Dynamic load query method by rowCount condition.
+      return model[rowCount ? 'findAndCountAll' : 'findAll']({
         where: whereQuery,
         include,
         limit: limit + 1,
@@ -64,7 +65,8 @@ function withPagination({ methodName = 'paginate', primaryKeyField = 'id' } = {}
           ...(paginationFieldIsNonId ? [primaryKeyField] : []),
         ],
         ...(Array.isArray(attributes) && attributes.length) ? { attributes } : {},
-      }).then(results => {
+      }).then(queryResults => {
+        const results = (rowCount) ? queryResults.rows : queryResults;
         const hasMore = results.length > limit;
 
         if (hasMore) {
@@ -93,6 +95,7 @@ function withPagination({ methodName = 'paginate', primaryKeyField = 'id' } = {}
 
         return {
           results,
+          ...rowCount ? { count: queryResults.count } : { count: null },
           cursors: {
             hasNext,
             hasPrevious,
