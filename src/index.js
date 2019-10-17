@@ -1,4 +1,7 @@
+const Sequelize = require('sequelize');
 const base64 = require('base-64');
+
+const { Op } = Sequelize;
 
 function decodeCursor(cursor) {
   return cursor ? JSON.parse(base64.decode(cursor)) : null;
@@ -36,11 +39,21 @@ function getPaginationQuery(cursor, cursorOrderOperator, paginationField, primar
 
 function withPagination({ methodName = 'paginate', primaryKeyField = 'id' } = {}) {
   return model => {
-    const paginate = ({ where = {}, attributes = [], include = [], limit, before, after, desc = false, paginationField = primaryKeyField, rowCount = false }) => {
+    const paginate = ({
+      where = {},
+      attributes = [],
+      include = [],
+      limit, before,
+      after,
+      desc = false,
+      paginationField = primaryKeyField,
+      rowCount = false,
+      indexHints,
+    }) => {
       const decodedBefore = !!before ? decodeCursor(before) : null;
       const decodedAfter = !!after ? decodeCursor(after) : null;
       const cursorOrderIsDesc = before ? !desc : desc;
-      const cursorOrderOperator = cursorOrderIsDesc ? '$lt' : '$gt';
+      const cursorOrderOperator = cursorOrderIsDesc ? Op.lt : Op.gt;
       const paginationFieldIsNonId = paginationField !== primaryKeyField;
 
       let paginationQuery;
@@ -64,6 +77,7 @@ function withPagination({ methodName = 'paginate', primaryKeyField = 'id' } = {}
           cursorOrderIsDesc ? [paginationField, 'DESC'] : paginationField,
           ...(paginationFieldIsNonId ? [primaryKeyField] : []),
         ],
+        ...(typeof indexHints !== 'undefined') ? { indexHints } : {},
         ...(Array.isArray(attributes) && attributes.length) ? { attributes } : {},
       }).then(queryResults => {
         const results = (rowCount) ? queryResults.rows : queryResults;
