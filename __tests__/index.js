@@ -4,6 +4,7 @@ const Sequelize = require('sequelize');
 const sequelize = new Sequelize('test', null, null, { dialect: 'sqlite', storage: path.join(__dirname, 'db.sqlite') });
 
 const withPagination = require('../src');
+const { Op } = Sequelize;
 
 const Test = sequelize.define('test', {
   id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
@@ -111,7 +112,7 @@ test('use findAndCountAll and get count if rowCount parameter is true', async t 
     paginationField: 'counter',
     where: {
       id: {
-        $lte: 3,
+        [Op.lte]: 3,
       }
     },
     rowCount: true,
@@ -125,7 +126,7 @@ test('use findAndCountAll and get count if rowCount parameter is true', async t 
     paginationField: 'counter',
     where: {
       id: {
-        $lte: 3,
+        [Op.lte]: 3,
       }
     },
     rowCount: false,

@@ -14,7 +14,7 @@ function encodeCursor(cursor) {
 function getPaginationQuery(cursor, cursorOrderOperator, paginationField, primaryKeyField) {
   if (paginationField !== primaryKeyField) {
     return {
-      $or: [
+      [Op.or]: [
         {
           [paginationField]: {
             [cursorOrderOperator]: cursor[0],
@@ -65,7 +65,7 @@ function withPagination({ methodName = 'paginate', primaryKeyField = 'id' } = {}
       }
 
       const whereQuery = paginationQuery
-        ? { $and: [paginationQuery, where] }
+        ? { [Op.and]: [paginationQuery, where] }
         : where;
 
       // Dynamic load query method by rowCount condition.
